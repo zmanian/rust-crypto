@@ -1204,6 +1204,7 @@ impl ZCashPRF for Sha256 {
         write_u32_be(&mut out[24..28], self.engine.state.h[6]);
         write_u32_be(&mut out[28..32], self.engine.state.h[7]);
     }
+    //The Zcash PRF from https://github.com/zcash/zcash/blob/master/src/zcash/prf.cpp
     fn prf(&mut self,a:bool, b:bool, c:bool, d:bool, x: &[u8;32],y: &[u8;32], out: &mut [u8]){
        let mut blob: [u8; 64] = [0; 64];
        blob[0..32].copy_from_slice(x);
