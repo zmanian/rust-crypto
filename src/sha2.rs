@@ -1184,6 +1184,32 @@ impl Digest for Sha224 {
     fn block_size(&self) -> usize { 64 }
 }
 
+trait ZCashPRF {
+    fn input(&mut self, d: &[u8]);
+    fn compress(&mut self, out: &mut [u8]);
+    
+}
+
+impl ZCashPRF for Sha256 {
+    fn input(&mut self, d: &[u8]) {
+        self.engine.input(d);
+    }
+    fn compress(&mut self, out: &mut [u8]) {
+        if self.engine.length_bits != 512 {
+            panic!("Invalid block size: {}", self.engine.length_bits);
+        }
+
+        write_u32_be(&mut out[0..4], self.engine.state.h[0]);
+        write_u32_be(&mut out[4..8], self.engine.state.h[1]);
+        write_u32_be(&mut out[8..12], self.engine.state.h[2]);
+        write_u32_be(&mut out[12..16], self.engine.state.h[3]);
+        write_u32_be(&mut out[16..20], self.engine.state.h[4]);
+        write_u32_be(&mut out[20..24], self.engine.state.h[5]);
+        write_u32_be(&mut out[24..28], self.engine.state.h[6]);
+        write_u32_be(&mut out[28..32], self.engine.state.h[7]);
+    }
+}
+
 static H224: [u32; STATE_LEN] = [
     0xc1059ed8,
     0x367cd507,
