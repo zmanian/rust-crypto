@@ -1185,15 +1185,11 @@ impl Digest for Sha224 {
 }
 
 trait ZCashPRF {
-    fn input(&mut self, d: &[u8]);
     fn compress(&mut self, out: &mut [u8]);
-    
+    fn prf(&mut self,a:bool, b:bool, c:bool, d:bool, x: &[u8;32],y: &[u8;32], out: &mut [u8]);
 }
 
 impl ZCashPRF for Sha256 {
-    fn input(&mut self, d: &[u8]) {
-        self.engine.input(d);
-    }
     fn compress(&mut self, out: &mut [u8]) {
         if self.engine.length_bits != 512 {
             panic!("Invalid block size: {}", self.engine.length_bits);
@@ -1207,6 +1203,15 @@ impl ZCashPRF for Sha256 {
         write_u32_be(&mut out[20..24], self.engine.state.h[5]);
         write_u32_be(&mut out[24..28], self.engine.state.h[6]);
         write_u32_be(&mut out[28..32], self.engine.state.h[7]);
+    }
+    fn prf(&mut self,a:bool, b:bool, c:bool, d:bool, x: &[u8;32],y: &[u8;32], out: &mut [u8]){
+       let mut blob: [u8; 64] = [0; 64];
+       blob[0..32].copy_from_slice(x);
+       blob[32..64].copy_from_slice(y);
+       blob[0] &= 0x0F;
+       blob[0] |= (if a {1 << 7} else{0}) | (if b {1 << 6} else {0}) | (if c { 1 << 5} else {0}) | (if d { 1 << 4} else {0});
+       self.input(&blob);
+       self.compress(out);
     }
 }
 
